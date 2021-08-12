@@ -1,2 +1,3 @@
 # dotemacs
-My .emacs files
+The files I use to setup my Emacs instance
+
