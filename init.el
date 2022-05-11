@@ -6,7 +6,6 @@
       (list '("melpa"        . "https://melpa.org/packages/")
             '("gnu"          . "https://elpa.gnu.org/packages/")))
 (package-initialize)
-(require 'bind-key)
 
 ;; load emacs customization
 (setq custom-file "~/.emacs.d/custom.el")

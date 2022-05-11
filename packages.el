@@ -2,6 +2,9 @@
 ;;; Commentary: This was Hai's package.el file and now its being
 ;;; subverted into mine (over time) provides env variables for emacs
 ;;; when starting from macOS UI
+
+(use-package bind-key)
+
 (use-package exec-path-from-shell
   :if (memq window-system '(mac ns))
   :config
