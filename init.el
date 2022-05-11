@@ -4,8 +4,7 @@
 (require 'package)
 (setq package-archives
       (list '("melpa"        . "https://melpa.org/packages/")
-            '("gnu"          . "https://elpa.gnu.org/packages/")
-            '("org"          . "https://orgmode.org/elpa/")))
+            '("gnu"          . "https://elpa.gnu.org/packages/")))
 (package-initialize)
 (require 'bind-key)
 

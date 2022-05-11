@@ -78,7 +78,8 @@
 
 ;; org mode
 (use-package org
-   :hook (org-mode . turn-on-auto-fill))
+  :hook (org-mode . turn-on-auto-fill)
+  :config (setq org-startup-folded t))
 (use-package org-bullets
   :hook (org-mode . (lambda () (org-bullets-mode 1))))
 ;; slide presentation with org files
@@ -184,7 +185,11 @@
                 sh-basic-offset 2))
 
 ;; magit
-(use-package magit :config (global-set-key (kbd "C-x m") 'magit-status))
+(use-package magit
+  :config
+  (global-set-key (kbd "C-x m") 'magit-status)
+  (use-package magit-section))
+
 (use-package magit-find-file)
 (use-package magit-filenotify)
 
@@ -385,5 +390,7 @@
 
 (use-package graphql-mode)
 
+
 ;; (provide (quote packages))
 ;;; packages.el ends here
+
