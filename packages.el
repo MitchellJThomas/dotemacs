@@ -1,8 +1,6 @@
 ;;; package --- Managing installed packages and their configuration
-;;; Commentary: This was Hai's package.el file and now its being
-;;; subverted into mine (over time) provides env variables for emacs
-;;; when starting from macOS UI
 
+;;; Code:
 (use-package bind-key)
 
 (use-package exec-path-from-shell
@@ -21,32 +19,6 @@
   (setq auto-package-update-hide-results nil)
   (auto-package-update-maybe))
 
-;; Need to install icons: M-x all-the-icons-install-fonts
-;; (use-package all-the-icons)
-
-;; (use-package doom-modeline
-;;   :pin melpa-stable
-;;   :init (doom-modeline-mode 1)
-;;   :config
-;;   (setq doom-modeline-buffer-encoding nil
-;;         doom-modeline-buffer-file-name-style 'buffer-name
-;;         doom-modeline-buffer-modification-icon t
-;;         doom-modeline-buffer-state-icon nil
-;;         doom-modeline-minor-modes t
-;;         doom-modeline-vcs-max-length 20))
-
-;; (use-package material-theme
-;;   :pin melpa-stable
-;;   :config
-;;   (load-theme 'material t)
-;;   (set-face-attribute 'mode-line nil :box '(:line-width 1 :color "grey75" :style "released-button")))
-
-;; (use-package winum :config (winum-mode))
-;; (use-package time
-;;   :config
-;;   (setq display-time-string-forms `(24-hours ":" minutes))
-;;   (display-time-mode))
-
 (use-package diminish)
 (diminish 'abbrev-mode)
 (diminish 'eldoc-mode)
@@ -60,29 +32,15 @@
 ;; ----------
 ;; util stuff
 ;; ----------
-``
-;; reuse buffer in dired mode
-(use-package dired-single
-  :preface
-  (defun dired-single-keybind ()
-     "Bunch of stuff to run for dired, either immediately or when it's loaded."
-     (define-key dired-mode-map [return] 'dired-single-buffer)
-     (define-key dired-mode-map [mouse-1] 'dired-single-buffer-mouse)
-     (define-key dired-mode-map "^"
-       (function
-        (lambda nil (interactive) (find-alternate-file "..")))) )
-  :config
-  ;; if dired is already loaded, then the keymap will be bound
-  (if (boundp 'dired-mode-map)
-      ;; just add our bindings
-      (dired-single-keybind)
-    ;; otherwise add our bindings to the load-hook
-    (add-hook 'dired-load-hook 'dired-single-keybind)))
+(use-package dired-subtree)
 
 ;; org mode
 (use-package org
   :hook (org-mode . turn-on-auto-fill)
-  :config (setq org-startup-folded t))
+  :config
+  (setq org-startup-folded t)
+  (org-babel-do-load-languages 'org-babel-load-languages '((lisp . t)))  
+  )
 (use-package org-bullets
   :hook (org-mode . (lambda () (org-bullets-mode 1))))
 ;; slide presentation with org files
@@ -97,8 +55,8 @@
         company-tooltip-idle-delay .5
         company-tooltip-limit 20
         company-minimum-prefix-length 1
-	company-show-quick-access t
-	;; cancel selections by typing non-matching characters
+    company-show-quick-access t
+    ;; cancel selections by typing non-matching characters
         company-require-match 'never
         ;; disable downcase candidates with dabbrev
         company-dabbrev-downcase nil)
@@ -112,19 +70,13 @@
 (use-package markdown-mode
   :mode ("\\.md\\'" "\\.mkd\\'" "\\.markdown\\'"))
 
-(use-package smartparens :config (smartparens-global-mode))
-
 (use-package yaml-mode :mode ("\\.yml\\'" "\\.yaml\\'"))
-(use-package yasnippet
-  ;;:diminish yas-minor-mode
-  :hook ((prog-mode . yas-minor-mode))
-  :config (yas-reload-all))
 
 (use-package flx)
 
 ;; ivy is a generic completion mechanism for emacs
 (use-package ivy
-  :diminish " \u2766"
+  :diminish " \\u2766"
   ;; :bind (:map ivy-minibuffer-faces
   ;;             ("TAB" . ivy-partial))
   :config
@@ -166,11 +118,6 @@
                                     :test-prefix "Test")
   (projectile-mode +1))
 
-;; since [s-p] is used as keymap prefix, make sure emacs can get it on Windows
-(if (string-equal system-type "windows-nt")
-    (w32-register-hot-key [s-p]))
-
-(use-package treemacs) ; used by lsp-java
 (use-package hydra) ; used by dap-mode
 
 ;; -----------
@@ -190,53 +137,29 @@
 ;; magit
 (use-package magit
   :config
-  (global-set-key (kbd "C-x m") 'magit-status)
-  (use-package magit-section))
+  (global-set-key (kbd "C-x m") 'magit-status))
 
+(use-package magit-section)
 (use-package magit-find-file)
 (use-package magit-filenotify)
 
-;; (use-package gradle-run-mode
-;;   :load-path "site-packages"
-;;   :diminish gradle-run-mode
-;;   :config (gradle-run-mode))
-
 (use-package flycheck
+  :init (global-flycheck-mode 1)
   :diminish " √"
   :config
   ;; disable JHint because ESLint is better
-  (setq-default flycheck-disabled-checkers '(javascript-jshint))
-  (global-flycheck-mode))
-
-(use-package cc-mode
-  :preface
-  (defun my:java-mode-hook ()
-    (setq c-basic-offset 2)
-    (c-set-offset 'inline-open 0)
-    (c-set-offset 'arglist-intro '+)
-    (c-set-offset 'arglist-close 0)
-    ;; Regex for parsing java compilation errors from gradle output
-    (add-to-list 'compilation-error-regexp-alist '("\\(.*compile.*?Java\\)?\\(.*\\):\\([0-9]+\\): \\(\\(warning\\)\\|error\\)" 2 3 nil (5)))
-    (add-to-list 'write-file-functions 'delete-trailing-whitespace))
-  (defun my:c++-mode-hook ()
-    (c-set-offset 'inline-open 0)
-    (c-set-offset 'brace-list-open '*)
-    (c-set-offset 'block-open 0)
-    (c-set-offset 'case-label '*)
-    (c-set-offset 'access-label '/))
-  :hook ((java-mode . my:java-mode-hook)
-         (c++-mode . my:c++-mode-hook)))
+  (setq-default flycheck-disabled-checkers '(javascript-jshint org-lint)))
 
 (use-package clojure-mode)
 
 (use-package lsp-mode
   :hook ((java-mode . lsp)
-	 (clojure-mode . lsp)
-	 (clojurescript-mode . lsp)
-	 (clojurec-mode . lsp))
+     (clojure-mode . lsp)
+     (clojurescript-mode . lsp)
+     (clojurec-mode . lsp))
   ;; Most generic way to hook a language... but not all languages have
   ;; a language server e.g. emacs-lisp (prog-mode . lsp-deferred)
-  
+
   ;; see https://emacs-lsp.github.io/lsp-mode/tutorials/clojure-guide for clojure specifics
   :commands (lsp lsp-deferred)
   ;; to save space since doom-modeline provides lsp state
@@ -245,11 +168,11 @@
   :bind-keymap ("C-c l" . lsp-command-map)
   :config
    (setq lsp-enable-file-watchers nil
-	lsp-lens-enable t
-	lsp-enable-indentation nil
+    lsp-lens-enable t
+    lsp-enable-indentation nil
         lsp-enable-on-type-formatting nil
         lsp-idle-delay 0.5
-	lsp-enable-links nil
+    lsp-enable-links nil
         ;; nil to shutdown the LSP server when all of its buffers are closed
         lsp-keep-workspace-alive nil
         ;; non-nil to print messages from/to lang server to *lsp-log* buffer
@@ -277,7 +200,6 @@
   ;;             ("C-c C-l u a" . lsp-ui-sideline-apply-code-action)))
 
 (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
-(use-package lsp-treemacs :commands lsp-treemacs-error-list)
 
 (use-package company-lsp
   :disabled ;; since lsp-mode v6.+; prefer lsp-mode's company-capf
@@ -290,52 +212,14 @@
         company-lsp-enable-recompletion t
         company-lsp-enable-snippet t))
 
-;; lsp-java needs treemacs to compile
-(use-package lsp-java
-  :after lsp-mode
-  :config
-  (setq lsp-java-completion-favorite-static-members ["com.google.common.base.Preconditions.*"
-                                                     "org.testng.Assert.*"
-                                                     "org.junit.Assert.*"
-                                                     "org.junit.Assume.*"
-                                                     "org.junit.jupiter.api.Assertions.*"
-                                                     "org.junit.jupiter.api.Assumptions.*"
-                                                     "org.junit.jupiter.api.DynamicContainer.*"
-                                                     "org.junit.jupiter.api.DynamicTest.*"
-                                                     "org.mockito.Mockito.*"]
-        lsp-java-import-gradle-enabled t
-        lsp-java-completion-import-order ["com.tripwire"
-                                          "tw"
-                                          "java"
-                                          "javax"
-                                          "static"]
-        ;;lsp-java-java-path "~/opt/jdk-11.0.2.jdk/Contents/Home/bin/java")
-        lsp-java-java-path "java"
-        lsp-java-signature-help-enabled nil))
-
-;; https://github.com/pwalsh/pipenv.el
-(use-package pipenv
-  :hook (python-mode . pipenv-mode)
-  :init
-  (setq
-   pipenv-projectile-after-switch-function
-   #'pipenv-projectile-after-switch-extended))
-
-(use-package lsp-python-ms
-  :init (setq lsp-python-ms-auto-install-server t)
+(use-package lsp-pyright
+  :ensure t
+  :custom (lsp-pyright-langserver-command "pyright") ;; or basedpyright
   :hook (python-mode . (lambda ()
-                          (require 'lsp-python-ms)
-                          (lsp-deferred))))  ; or lsp
-
-(use-package dap-mode)
+                          (require 'lsp-pyright)
+                          (lsp))))  ; or lsp-deferred
 
 (use-package protobuf-mode :mode ("\\.proto\\'"))
-
-(use-package groovy-mode
-  :mode ("\\.gradle\\'" "\\.groovy\\'")
-  :config
-  (setq groovy-indent-offset 2)
-  (add-to-list 'lsp-language-id-configuration '(groovy-mode . "groovy")))
 
 (use-package js
   :hook (js-mode . (lambda () (setq-local mode-name "js")))
@@ -360,7 +244,6 @@
         web-mode-enable-control-block-indentation nil
         web-mode-enable-css-colorization t
         web-mode-enable-current-column-highlight t
-        web-mode-enable-current-element-highlight t
         web-mode-enable-current-element-highlight t)
 
   ;; set up html-helpter-timestamp
@@ -386,14 +269,18 @@
 
 ;; clojure
 (use-package smartparens
-  :config (smartparens-global-strict-mode))
+  :ensure t
+  :config
+  (require 'smartparens-config)
+  :diminish smartparens-mode)
+
 (use-package cider)
 
 (use-package json-mode)
 
-(use-package graphql-mode)
+(use-package go-mode)
 
+(use-package fish-mode)
 
 ;; (provide (quote packages))
 ;;; packages.el ends here
-
